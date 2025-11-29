@@ -1,0 +1,82 @@
+name: Audit Mode Monitoring
+
+on:
+  schedule:
+    # Runs every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+jobs:
+  audit-network-connections:
+    name: Audit Network Connections
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bullfrog in audit mode - monitors but doesn't block
+      - name: Setup Bullfrog Security (Audit Mode)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run network connection tests
+        run: npm run network-test
+
+      - name: Test various package managers
+        run: |
+          echo "Testing NPM registry access..."
+          npm view express version
+
+          echo "Testing additional domains..."
+          curl -I https://www.google.com || true
+          curl -I https://pypi.org || true
+          curl -I https://registry.hub.docker.com || true
+
+      - name: Summary
+        run: |
+          echo "Audit mode complete!"
+          echo "Check the workflow summary for all detected network connections."
+          echo "This information helps you build an allow-list for block mode."
+
+  audit-with-external-apis:
+    name: Audit External API Calls
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Audit Mode)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          # No explicit egress-policy - defaults to audit mode
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make external API calls
+        run: |
+          echo "Making various external API calls for audit..."
+
+          # GitHub API
+          curl -s https://api.github.com/repos/bullfrogsec/bullfrog | jq -r '.description' || true
+
+          # Example API
+          curl -s https://api.github.com/zen || true
+
+          # HTTPBin for testing
+          curl -s https://httpbin.org/get || true
+
+      - name: Display audit results
+        run: |
+          echo "All network connections have been logged."
+          echo "Review the workflow summary to see what was accessed."

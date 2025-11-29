@@ -1,0 +1,136 @@
+name: Mixed Protection Levels
+
+on:
+  schedule:
+    # Runs every 8 hours
+    - cron: "0 */8 * * *"
+  workflow_dispatch:
+
+jobs:
+  unprotected-build:
+    name: Unprotected Build (No Bullfrog)
+    runs-on: ubuntu-latest
+
+    steps:
+      # No Bullfrog - completely unprotected
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+
+      - name: Make unrestricted network calls
+        run: |
+          echo "Making network calls without any protection..."
+          curl -s https://www.google.com > /dev/null && echo "✓ Google.com accessible"
+          curl -s https://example.com > /dev/null && echo "✓ Example.com accessible"
+          curl -s https://pypi.org > /dev/null && echo "✓ PyPI accessible"
+
+  audit-only-job:
+    name: Audit Only (Monitoring)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Audit)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Make monitored network calls
+        run: |
+          echo "Making network calls with audit monitoring..."
+          npm run network-test
+
+  protected-job:
+    name: Protected Build (Block Mode)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Block)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+            api.github.com
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+
+      - name: Attempt blocked connections
+        run: |
+          echo "Attempting connections that should be blocked..."
+          curl -s --max-time 5 https://www.google.com > /dev/null && echo "✗ Google.com accessible (SHOULD BE BLOCKED)" || echo "✓ Google.com blocked"
+          curl -s --max-time 5 https://example.com > /dev/null && echo "✗ Example.com accessible (SHOULD BE BLOCKED)" || echo "✓ Example.com blocked"
+
+  partially-protected-job:
+    name: Partially Protected (Some Domains Allowed)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Partial)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+            api.github.com
+            httpbin.org
+          dns-policy: any
+          enable-sudo: true
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Test selective access
+        run: |
+          echo "Testing selectively allowed domains..."
+          curl -s https://httpbin.org/get && echo "✓ HTTPBin accessible (allowed)"
+          curl -s --max-time 5 https://www.google.com > /dev/null && echo "✗ Google.com accessible (SHOULD BE BLOCKED)" || echo "✓ Google.com blocked"

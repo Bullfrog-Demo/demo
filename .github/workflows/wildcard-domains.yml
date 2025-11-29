@@ -1,0 +1,233 @@
+name: Wildcard Domain Patterns
+
+on:
+  schedule:
+    # Runs every 12 hours
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+jobs:
+  docker-hub-access:
+    name: Docker Hub with Wildcards
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Docker Hub)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            *.docker.com
+            docker.io
+            *.docker.io
+            registry-1.docker.io
+            auth.docker.io
+            production.cloudflare.docker.com
+          dns-policy: allowed-domains-only
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Pull Docker images
+        run: |
+          echo "=== Testing Docker Hub Access with Wildcards ==="
+          echo ""
+
+          echo "1. Pulling official Node.js image..."
+          docker pull node:20-alpine
+
+          echo ""
+          echo "2. Pulling official Ubuntu image..."
+          docker pull ubuntu:latest
+
+          echo ""
+          echo "3. Listing pulled images..."
+          docker images
+
+          echo ""
+          echo "✓ Docker Hub access successful with wildcard domains!"
+
+  github-ecosystem:
+    name: GitHub Ecosystem Access
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (GitHub Ecosystem)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            *.github.com
+            *.githubusercontent.com
+            github.com
+            api.github.com
+            raw.githubusercontent.com
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Access GitHub APIs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "=== Testing GitHub Ecosystem with Wildcards ==="
+          echo ""
+
+          echo "1. Testing GitHub API..."
+          curl -s https://api.github.com/zen
+
+          echo ""
+          echo "2. Fetching repository info..."
+          curl -s https://api.github.com/repos/bullfrogsec/bullfrog | jq -r '.description' || echo "Description fetch complete"
+
+          echo ""
+          echo "3. Testing raw.githubusercontent.com..."
+          curl -s https://raw.githubusercontent.com/bullfrogsec/bullfrog/main/README.md | head -n 5
+
+          echo ""
+          echo "✓ GitHub ecosystem access successful!"
+
+  npm-and-cdn-access:
+    name: NPM and CDN Access
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (NPM + CDNs)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+            *.unpkg.com
+            unpkg.com
+            *.jsdelivr.net
+            cdn.jsdelivr.net
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "24"
+
+      - name: Access NPM registry
+        run: |
+          echo "=== Testing NPM and CDN Access ==="
+          echo ""
+
+          echo "1. Installing packages from NPM..."
+          npm install
+
+          echo ""
+          echo "2. Checking package information..."
+          npm view express version
+
+          echo ""
+          echo "3. Testing CDN access (unpkg)..."
+          curl -s https://unpkg.com/react@18.0.0/package.json | jq -r '.version'
+
+          echo ""
+          echo "✓ NPM and CDN access successful!"
+
+  cloud-providers:
+    name: Cloud Provider Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Cloud Providers)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            *.amazonaws.com
+            *.aws.amazon.com
+            s3.amazonaws.com
+            *.s3.amazonaws.com
+          dns-policy: allowed-domains-only
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Test AWS endpoints
+        continue-on-error: true
+        run: |
+          echo "=== Testing Cloud Provider Access ==="
+          echo ""
+
+          echo "Note: This demonstrates wildcard patterns for AWS domains"
+          echo "Actual AWS access would require credentials"
+          echo ""
+
+          echo "Testing DNS resolution for AWS domains..."
+          nslookup s3.amazonaws.com || echo "DNS check complete"
+
+          echo ""
+          echo "Wildcard patterns like *.amazonaws.com allow:"
+          echo "  - s3.amazonaws.com"
+          echo "  - ec2.amazonaws.com"
+          echo "  - dynamodb.amazonaws.com"
+          echo "  - And all other AWS services"
+
+  selective-wildcards:
+    name: Selective Wildcard Patterns
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Selective)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            api.github.com
+            *.githubusercontent.com
+            httpbin.org
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Test selective access
+        continue-on-error: true
+        run: |
+          echo "=== Testing Selective Wildcard Access ==="
+          echo ""
+
+          echo "1. Testing allowed wildcard (api.github.com)..."
+          curl -s https://api.github.com/zen && echo "  ✓ Allowed"
+
+          echo ""
+          echo "2. Testing allowed domain (httpbin.org)..."
+          curl -s https://httpbin.org/get > /dev/null && echo "  ✓ Allowed"
+
+          echo ""
+          echo "3. Testing blocked domain (example.com)..."
+          curl -s --max-time 5 https://example.com > /dev/null && echo "  ✗ Should be blocked" || echo "  ✓ Blocked as expected"
+
+          echo ""
+          echo "4. Testing blocked domain (google.com)..."
+          curl -s --max-time 5 https://www.google.com > /dev/null && echo "  ✗ Should be blocked" || echo "  ✓ Blocked as expected"
+
+          echo ""
+          echo "=== Wildcard Pattern Demo Complete ==="

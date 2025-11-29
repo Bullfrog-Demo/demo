@@ -1,0 +1,157 @@
+name: Connection Blocking Demo
+
+on:
+  schedule:
+    # Runs twice daily
+    - cron: "0 0,12 * * *"
+  workflow_dispatch:
+
+jobs:
+  strict-blocking:
+    name: Strict Blocking (Minimal Allow-List)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Strict)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          # Only allow GitHub and NPM - nothing else
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+          dns-policy: allowed-domains-only
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Attempt unauthorized connections
+        continue-on-error: true
+        run: |
+          echo "=== Testing Blocked Connections ==="
+          echo ""
+
+          echo "1. Testing Google (should be blocked)..."
+          curl -s --max-time 5 https://www.google.com > /dev/null && echo "  ✗ FAIL: Connection succeeded" || echo "  ✓ PASS: Connection blocked"
+
+          echo ""
+          echo "2. Testing Docker Hub (should be blocked)..."
+          curl -s --max-time 5 https://registry.hub.docker.com > /dev/null && echo "  ✗ FAIL: Connection succeeded" || echo "  ✓ PASS: Connection blocked"
+
+          echo ""
+          echo "3. Testing PyPI (should be blocked)..."
+          curl -s --max-time 5 https://pypi.org > /dev/null && echo "  ✗ FAIL: Connection succeeded" || echo "  ✓ PASS: Connection blocked"
+
+          echo ""
+          echo "4. Testing AWS (should be blocked)..."
+          curl -s --max-time 5 https://aws.amazon.com > /dev/null && echo "  ✗ FAIL: Connection succeeded" || echo "  ✓ PASS: Connection blocked"
+
+          echo ""
+          echo "5. Testing random domain (should be blocked)..."
+          curl -s --max-time 5 https://example.com > /dev/null && echo "  ✗ FAIL: Connection succeeded" || echo "  ✓ PASS: Connection blocked"
+
+          echo ""
+          echo "=== Blocking Test Complete ==="
+
+      - name: Verify allowed connections work
+        run: |
+          echo "=== Testing Allowed Connections ==="
+          echo ""
+
+          echo "1. Testing GitHub API (should work)..."
+          curl -s https://api.github.com/zen && echo "  ✓ PASS: Connection succeeded"
+
+          echo ""
+          echo "2. Testing NPM registry (should work)..."
+          npm view express version && echo "  ✓ PASS: NPM registry accessible"
+
+          echo ""
+          echo "=== Allowed Connections Test Complete ==="
+
+  block-with-ip-allowlist:
+    name: Block with IP Allow-List
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (IP-based)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+          # Allow specific IP addresses
+          allowed-ips: |
+            1.1.1.1
+            8.8.8.8
+          dns-policy: any
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Test IP-based access
+        continue-on-error: true
+        run: |
+          echo "Testing connections with IP allow-list..."
+          echo ""
+
+          echo "1. Testing connection to allowed IP (1.1.1.1)..."
+          curl -s --max-time 5 http://1.1.1.1 > /dev/null && echo "  ✓ Allowed IP accessible" || echo "  ✗ Connection failed"
+
+          echo ""
+          echo "2. Testing domain resolution with 'any' DNS policy..."
+          nslookup google.com && echo "  ✓ DNS resolution works" || echo "  ✗ DNS resolution failed"
+
+          echo ""
+          echo "3. Testing connection to non-allowed domain..."
+          curl -s --max-time 5 https://example.com > /dev/null && echo "  ✗ Connection succeeded (should be blocked)" || echo "  ✓ Connection blocked"
+
+  zero-trust-blocking:
+    name: Zero Trust (Block Everything)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Zero Trust)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          # Allow only essential GitHub domains
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+          dns-policy: allowed-domains-only
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Test zero-trust environment
+        continue-on-error: true
+        run: |
+          echo "=== Zero Trust Blocking Test ==="
+          echo "In this job, even NPM registry is blocked!"
+          echo ""
+
+          # This will fail because npmjs.org is not in the allow-list
+          echo "Attempting to check NPM package (should fail)..."
+          npm view express version || echo "✓ NPM registry blocked as expected"
+
+          echo ""
+          echo "All external connections blocked - only GitHub access allowed"

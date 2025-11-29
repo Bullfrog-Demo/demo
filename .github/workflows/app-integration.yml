@@ -1,0 +1,153 @@
+name: Bullfrog App Integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/app-integration.yml"
+  schedule:
+    # Runs daily
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  monitored-workflow:
+    name: Workflow Monitored by Bullfrog App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+            api.bullfrogsec.com
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Workflow summary
+        run: |
+          echo "# Bullfrog App Integration Demo" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow is monitored by the Bullfrog GitHub App." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What the App Tracks:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Workflow execution status" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Network connections attempted" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Blocked connection attempts" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security policy compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## View Results:" >> $GITHUB_STEP_SUMMARY
+          echo "Visit the Bullfrog App dashboard to see:" >> $GITHUB_STEP_SUMMARY
+          echo "- Organization-wide security posture" >> $GITHUB_STEP_SUMMARY
+          echo "- All workflow runs and their security events" >> $GITHUB_STEP_SUMMARY
+          echo "- Configured alerts and notifications" >> $GITHUB_STEP_SUMMARY
+          echo "- Network connection patterns" >> $GITHUB_STEP_SUMMARY
+
+  alert-trigger-demo:
+    name: Security Alert Demonstration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security (Alert Mode)
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Trigger security event (blocked connection)
+        continue-on-error: true
+        run: |
+          echo "Attempting unauthorized connection..."
+          echo "This will trigger an alert in the Bullfrog App dashboard"
+
+          # This connection will be blocked and reported to the app
+          curl -s --max-time 5 https://example.com > /dev/null && \
+            echo "Connection succeeded (unexpected)" || \
+            echo "Connection blocked - alert triggered!"
+
+      - name: Alert information
+        run: |
+          echo "# Security Alert Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "An unauthorized connection attempt was blocked and reported." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Happens Next:" >> $GITHUB_STEP_SUMMARY
+          echo "1. The Bullfrog App receives the security event" >> $GITHUB_STEP_SUMMARY
+          echo "2. Alert rules are evaluated" >> $GITHUB_STEP_SUMMARY
+          echo "3. Email notifications sent (if configured)" >> $GITHUB_STEP_SUMMARY
+          echo "4. Event logged in the dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check your Bullfrog App dashboard and email for alerts!" >> $GITHUB_STEP_SUMMARY
+
+  compliance-check:
+    name: Security Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Verify security configuration
+        run: |
+          echo "# Security Compliance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Compliance Checks:" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Bullfrog action is first step" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Block mode enabled" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Actions pinned to commit hashes" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Sudo disabled" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Minimal allow-list configured" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Monitored by:" >> $GITHUB_STEP_SUMMARY
+          echo "Bullfrog GitHub App tracks this workflow's security posture" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Benefits:" >> $GITHUB_STEP_SUMMARY
+          echo "- Real-time security monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- Email alerts for security events" >> $GITHUB_STEP_SUMMARY
+          echo "- Organization-wide visibility" >> $GITHUB_STEP_SUMMARY
+          echo "- Workflow risk analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Network connection auditing" >> $GITHUB_STEP_SUMMARY

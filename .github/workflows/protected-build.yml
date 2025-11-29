@@ -1,0 +1,82 @@
+name: Protected Build (Block Mode)
+
+on:
+  schedule:
+    # Runs every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  fully-protected-build:
+    name: Fully Protected Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # IMPORTANT: Bullfrog must be the first step
+      - name: Setup Bullfrog Security
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            objects.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Verify build output
+        run: ls -la dist/
+
+  protected-with-docker:
+    name: Protected Build with Docker Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Bullfrog Security
+        uses: bullfrogsec/bullfrog@publish-results
+        with:
+          api-token: ${{ secrets.BULLFROG_API_TOKEN }}
+          egress-policy: block
+          allowed-domains: |
+            github.com
+            *.github.com
+            *.githubusercontent.com
+            registry.npmjs.org
+            *.npmjs.org
+            *.docker.com
+            docker.io
+            *.docker.io
+            registry-1.docker.io
+          dns-policy: allowed-domains-only
+          enable-sudo: false
+
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Pull Docker image
+        run: docker pull node:20-alpine
+
+      - name: Run app in Docker
+        run: |
+          docker run --rm node:20-alpine node --version
+          echo "Docker container executed successfully"
