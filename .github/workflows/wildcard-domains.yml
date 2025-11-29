@@ -1,6 +1,11 @@
 name: Wildcard Domain Patterns
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/wildcard-domains.yml"
   schedule:
     # Runs every 12 hours
     - cron: "0 */12 * * *"

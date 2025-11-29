@@ -1,6 +1,11 @@
 name: Mixed Protection Levels
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/mixed-protection.yml"
   schedule:
     # Runs every 8 hours
     - cron: "0 */8 * * *"

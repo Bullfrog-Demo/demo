@@ -1,6 +1,11 @@
 name: Protected Build (Block Mode)
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/protected-build.yml"
   schedule:
     # Runs every 6 hours
     - cron: "0 */6 * * *"

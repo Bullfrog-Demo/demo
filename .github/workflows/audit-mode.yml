@@ -1,6 +1,11 @@
 name: Audit Mode Monitoring
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/audit-mode.yml"
   schedule:
     # Runs every 4 hours
     - cron: "0 */4 * * *"

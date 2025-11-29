@@ -1,6 +1,11 @@
 name: Connection Blocking Demo
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/blocking-demo.yml"
   schedule:
     # Runs twice daily
     - cron: "0 0,12 * * *"
