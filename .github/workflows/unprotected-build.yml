@@ -1,0 +1,103 @@
+name: Unprotected Build (Insecure Demo)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/unprotected-build.yml"
+  schedule:
+    # Runs every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  unprotected-workflow:
+    name: Build Without Bullfrog Protection
+    runs-on: ubuntu-latest
+
+    steps:
+      # WARNING: This workflow intentionally demonstrates INSECURE practices
+      # DO NOT use this as a template for production workflows!
+
+      - name: Checkout code
+        uses: actions/checkout@v4  # Using version tag instead of commit hash
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4  # Using version tag instead of commit hash
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Unprotected network access
+        run: |
+          echo "This workflow has NO network restrictions"
+          echo "Can connect to any domain without monitoring"
+          curl -s https://api.github.com/zen
+
+      - name: Workflow summary
+        run: |
+          echo "# ⚠️ Unprotected Workflow Demo" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Issues in This Workflow:" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ No Bullfrog protection" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Actions not pinned to commit hashes" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ No network egress filtering" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ No monitoring or alerts" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Unrestricted sudo access" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## What Could Go Wrong:" >> $GITHUB_STEP_SUMMARY
+          echo "- Third-party actions could be compromised" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies could exfiltrate data" >> $GITHUB_STEP_SUMMARY
+          echo "- No visibility into network activity" >> $GITHUB_STEP_SUMMARY
+          echo "- No alerts for suspicious behavior" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Solution:" >> $GITHUB_STEP_SUMMARY
+          echo "Compare this to the protected workflows to see how Bullfrog:" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitors and controls network access" >> $GITHUB_STEP_SUMMARY
+          echo "- Enforces action pinning best practices" >> $GITHUB_STEP_SUMMARY
+          echo "- Provides real-time security alerts" >> $GITHUB_STEP_SUMMARY
+          echo "- Gives visibility through the GitHub App dashboard" >> $GITHUB_STEP_SUMMARY
+
+  unprotected-deploy:
+    name: Deploy Without Security Controls
+    runs-on: ubuntu-latest
+    needs: unprotected-workflow
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  # Using version tag instead of commit hash
+
+      - name: Third-party action (unpinned)
+        uses: actions/upload-artifact@v4  # Using version tag instead of commit hash
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Unrestricted deployment
+        run: |
+          echo "# ⚠️ Deployment Without Controls" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This deployment step has:" >> $GITHUB_STEP_SUMMARY
+          echo "- No network restrictions" >> $GITHUB_STEP_SUMMARY
+          echo "- No monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- No alerts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "In a real scenario, compromised dependencies could:" >> $GITHUB_STEP_SUMMARY
+          echo "- Exfiltrate secrets to attacker-controlled servers" >> $GITHUB_STEP_SUMMARY
+          echo "- Download and execute malicious code" >> $GITHUB_STEP_SUMMARY
+          echo "- Modify deployment artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "With Bullfrog, you would get:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Network egress control" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Real-time monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Instant alerts on suspicious activity" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Complete audit trail in the App dashboard" >> $GITHUB_STEP_SUMMARY
