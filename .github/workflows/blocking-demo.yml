@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (Strict)
-        uses: bullfrogsec/bullfrog@publish-results
+        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
@@ -91,7 +91,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (IP-based)
-        uses: bullfrogsec/bullfrog@publish-results
+        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
@@ -132,7 +132,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (Zero Trust)
-        uses: bullfrogsec/bullfrog@publish-results
+        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block

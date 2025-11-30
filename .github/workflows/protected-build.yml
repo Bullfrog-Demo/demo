@@ -19,7 +19,7 @@ jobs:
     steps:
       # IMPORTANT: Bullfrog must be the first step
       - name: Setup Bullfrog Security
-        uses: bullfrogsec/bullfrog@publish-results
+        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security
-        uses: bullfrogsec/bullfrog@publish-results
+        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
