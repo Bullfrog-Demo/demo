@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (Audit)
-        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
+        uses: bullfrogsec/bullfrog@b3197a81c5230b8a4cecaaec78a5b222eb5267f8
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: audit
@@ -72,7 +72,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (Block)
-        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
+        uses: bullfrogsec/bullfrog@b3197a81c5230b8a4cecaaec78a5b222eb5267f8
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
@@ -111,7 +111,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security (Partial)
-        uses: bullfrogsec/bullfrog@70dcb022f4739764229095705474259b438c4f23
+        uses: bullfrogsec/bullfrog@b3197a81c5230b8a4cecaaec78a5b222eb5267f8
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
