@@ -7,8 +7,8 @@ on:
     paths:
       - ".github/workflows/wildcard-domains.yml"
   schedule:
-    # Runs every 12 hours
-    - cron: "0 */12 * * *"
+    # Runs daily
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 jobs:

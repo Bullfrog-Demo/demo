@@ -7,8 +7,8 @@ on:
     paths:
       - ".github/workflows/blocking-demo.yml"
   schedule:
-    # Runs twice daily
-    - cron: "0 0,12 * * *"
+    # Runs daily
+    - cron: "0 10 * * *"
   workflow_dispatch:
 
 jobs:
