@@ -131,7 +131,7 @@ After a workflow runs:
 ### Egress Policy
 
 ```yaml
-- uses: bullfrogsec/bullfrog@1831f79cce8ad602eef14d2163873f27081ebfb3 # v0.8.4
+- uses: bullfrogsec/bullfrog@ebd3ce460ed3371d6fd751649fc1637ef0c21a18 # v0.11.0
   with:
     egress-policy: block # or 'audit'
 ```
@@ -187,7 +187,7 @@ enable-sudo: false # or 'true'
 Start with audit mode to understand your workflows:
 
 ```yaml
-- uses: bullfrogsec/bullfrog@1831f79cce8ad602eef14d2163873f27081ebfb3 # v0.8.4
+- uses: bullfrogsec/bullfrog@ebd3ce460ed3371d6fd751649fc1637ef0c21a18 # v0.11.0
   with:
     egress-policy: audit
 ```
@@ -199,7 +199,7 @@ Run your workflows normally and check the summaries to see what's accessed.
 Once you know what domains are needed, switch to block mode:
 
 ```yaml
-- uses: bullfrogsec/bullfrog@1831f79cce8ad602eef14d2163873f27081ebfb3 # v0.8.4
+- uses: bullfrogsec/bullfrog@ebd3ce460ed3371d6fd751649fc1637ef0c21a18 # v0.11.0
   with:
     egress-policy: block
     allowed-domains: |
@@ -252,7 +252,7 @@ allowed-domains: |
 ```yaml
 steps:
   - name: Setup Bullfrog Security
-    uses: bullfrogsec/bullfrog@1831f79cce8ad602eef14d2163873f27081ebfb3 # v0.8.4
+    uses: bullfrogsec/bullfrog@ebd3ce460ed3371d6fd751649fc1637ef0c21a18 # v0.11.0
 
   - name: Checkout code
     uses: actions/checkout@v4
