@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Setup Bullfrog Security
-        uses: bullfrogsec/bullfrog@ebd3ce460ed3371d6fd751649fc1637ef0c21a18 # v0.11.0
+        uses: bullfrogsec/bullfrog@bump-agent-v0.11.1 # v0.11.0
         with:
           api-token: ${{ secrets.BULLFROG_API_TOKEN }}
           egress-policy: block
@@ -79,9 +79,12 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Pull Docker image
-        run: docker pull node:20-alpine
+        run: docker pull node:24-alpine
 
-      - name: Run app in Docker
+      - name: Run npm install in Docker
         run: |
-          docker run --rm node:20-alpine node --version
+          docker create --name build-container -w /app node:24-alpine npm install
+          docker cp package.json build-container:/app/package.json
+          docker start -a build-container
+          docker rm build-container
           echo "Docker container executed successfully"
